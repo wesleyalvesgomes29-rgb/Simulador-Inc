@@ -1,0 +1,6 @@
+{
+  "name": "Simulador MCMV - Park Jardim do Sol",
+  "description": "Simulador comercial para corretores de imóveis - MCMV e fluxo de pagamento Park Jardim do Sol (INC Empreendimentos).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
