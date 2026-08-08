@@ -1,50 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, ChevronLeft, Home, CheckCircle2, Search, Car, Maximize2, AlertCircle, Edit3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, ChevronLeft, Home, CheckCircle2, Search, Car, Maximize2, AlertCircle, Edit3, Building2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ParkUnit } from '../types';
-import { INITIAL_PARK_UNITS } from '../data/jardimDoSolData';
+import { ParkUnit, Empreendimento } from '../types';
+import { ALL_EMPREENDIMENTOS } from '../data/developmentsData';
 import { formatBRL, parseBRLInput } from '../utils/formatters';
 
 interface Step3EscolhaImovelProps {
+  selectedEmpreendimento: Empreendimento;
+  setSelectedEmpreendimento: (emp: Empreendimento) => void;
   selectedUnit: ParkUnit | null;
   setSelectedUnit: (unit: ParkUnit | null) => void;
   valorImovel: number;
   setValorImovel: (val: number) => void;
-  availableUnits?: ParkUnit[];
+  setNumParcelasEntrada?: (num: number) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
 export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
+  selectedEmpreendimento,
+  setSelectedEmpreendimento,
   selectedUnit,
   setSelectedUnit,
   valorImovel,
   setValorImovel,
-  availableUnits = INITIAL_PARK_UNITS,
+  setNumParcelasEntrada,
   onNext,
   onBack,
 }) => {
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [empSearchTerm, setEmpSearchTerm] = useState<string>('');
+  const [unitSearchTerm, setUnitSearchTerm] = useState<string>('');
   const [isCustom, setIsCustom] = useState<boolean>(!selectedUnit && valorImovel > 0);
   const [displayCustomValor, setDisplayCustomValor] = useState<string>(
     valorImovel > 0 ? formatBRL(valorImovel) : ''
   );
 
-  const cleanQuery = searchTerm.trim().toLowerCase();
+  const cleanUnitQuery = unitSearchTerm.trim().toLowerCase();
+  const cleanEmpQuery = empSearchTerm.trim().toLowerCase();
 
-  // Filter units strictly based on search term (only when typed)
-  const matchingUnits = cleanQuery.length > 0
+  // Filter available developments
+  const filteredEmpreendimentos = ALL_EMPREENDIMENTOS.filter(emp =>
+    emp.nomeEmpreendimento.toLowerCase().includes(cleanEmpQuery) ||
+    emp.localizacao.toLowerCase().includes(cleanEmpQuery)
+  );
+
+  // Filter units of selected development (only when search query is present)
+  const availableUnits = selectedEmpreendimento.units.filter(u => u.status === 'Disponível');
+  
+  const matchingUnits = cleanUnitQuery.length > 0
     ? availableUnits.filter((u) => {
-        const numOnly = cleanQuery.replace(/\D/g, '');
+        const numOnly = cleanUnitQuery.replace(/\D/g, '');
         const unitNum = u.unidade.toLowerCase();
-        
-        // Match exact or partial unit number (e.g., "0101", "1510", "101")
         if (numOnly.length > 0) {
-          return unitNum.includes(numOnly) || unitNum.includes(cleanQuery);
+          return unitNum.includes(numOnly) || unitNum.includes(cleanUnitQuery);
         }
-        return unitNum.includes(cleanQuery);
+        return unitNum.includes(cleanUnitQuery);
       })
     : [];
+
+  const handleSelectEmpreendimento = (emp: Empreendimento) => {
+    setSelectedEmpreendimento(emp);
+    setSelectedUnit(null);
+    setUnitSearchTerm('');
+    setIsCustom(false);
+    const maxInstallments = emp.maxParcelasEntrada || ((emp.qtdParcelasObra || 30) + (emp.qtdParcelasPosObra || 78));
+    if (setNumParcelasEntrada) {
+      setNumParcelasEntrada(maxInstallments);
+    }
+    if (emp.units && emp.units.length > 0) {
+      const firstAvailable = emp.units.find(u => u.status === 'Disponível') || emp.units[0];
+      setSelectedUnit(firstAvailable);
+      setValorImovel(firstAvailable.valorVenda || firstAvailable.valorFinal);
+    }
+  };
 
   const handleSelectUnit = (unit: ParkUnit) => {
     setSelectedUnit(unit);
@@ -74,7 +102,6 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
     onNext();
   };
 
-  // Helper to format tipologia display (e.g., "02 Quartos GARDEN" -> "02 Quartos • Garden")
   const formatTipologia = (tipologia: string) => {
     if (tipologia.toLowerCase().includes('garden')) {
       return tipologia.replace(/garden/i, '• Garden');
@@ -103,11 +130,11 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
         <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-800">
           <div>
             <span className="text-xs font-bold text-teal-400 uppercase tracking-wider block mb-1">
-              Etapa 3 de 6 • PARK JARDIM DO SOL
+              Etapa 3 de 6 • ESCOLHA DO IMÓVEL
             </span>
             <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-              <Home className="w-5 h-5 text-emerald-400" />
-              ESCOLHA A UNIDADE
+              <Building2 className="w-5 h-5 text-emerald-400" />
+              {selectedEmpreendimento.nomeEmpreendimento.toUpperCase()}
             </h2>
           </div>
           <button
@@ -120,27 +147,63 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Search Field */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* 1. SELEÇÃO E PESQUISA DE EMPREENDIMENTO */}
           <div>
-            <label className="block text-xs font-bold text-teal-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Search className="w-4 h-4 text-emerald-400" />
+              🔎 PESQUISAR EMPREENDIMENTO
+            </label>
+
+            {/* Development Selection Tabs */}
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              {filteredEmpreendimentos.map((emp) => {
+                const isSelected = selectedEmpreendimento.id === emp.id;
+                return (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    onClick={() => handleSelectEmpreendimento(emp)}
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-400/30'
+                        : 'bg-slate-950 border-slate-800 hover:bg-slate-850 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs font-black uppercase ${isSelected ? 'text-emerald-300' : 'text-slate-200'}`}>
+                        {emp.nomeEmpreendimento}
+                      </span>
+                      {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-semibold block">
+                      {emp.localizacao} • INC
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. PESQUISA E SELEÇÃO DE UNIDADE */}
+          <div className="pt-2 border-t border-slate-800/80">
+            <label className="block text-xs font-bold text-teal-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Search className="w-4 h-4 text-teal-400" />
-              PESQUISAR UNIDADE
+              🔎 PESQUISAR UNIDADE ({selectedEmpreendimento.nomeEmpreendimento})
             </label>
             <div className="relative">
               <input
                 type="text"
                 inputMode="numeric"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Digite o número da unidade (ex.: 0101)"
+                value={unitSearchTerm}
+                onChange={(e) => setUnitSearchTerm(e.target.value)}
+                placeholder="Digite o número da unidade (ex.: 0101, 1510)"
                 className="w-full bg-slate-950 border-2 border-slate-700 focus:border-teal-400 text-white font-bold text-base rounded-2xl pl-4 pr-10 py-3.5 outline-none shadow-inner placeholder:text-slate-500 transition-colors"
-                autoFocus
               />
-              {searchTerm && (
+              {unitSearchTerm && (
                 <button
                   type="button"
-                  onClick={() => setSearchTerm('')}
+                  onClick={() => setUnitSearchTerm('')}
                   className="absolute right-3.5 top-3.5 text-xs font-bold bg-slate-800 text-slate-400 hover:text-white w-6 h-6 rounded-full flex items-center justify-center"
                 >
                   ✕
@@ -149,8 +212,8 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
             </div>
           </div>
 
-          {/* Currently Selected Unit Banner (if user returns or has selected) */}
-          {selectedUnit && !cleanQuery && !isCustom && (
+          {/* Currently Selected Unit Banner */}
+          {selectedUnit && !cleanUnitQuery && !isCustom && (
             <div className="bg-emerald-950/60 border-2 border-emerald-500/50 p-4 rounded-2xl shadow-lg relative">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">
@@ -160,7 +223,7 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                   type="button"
                   onClick={() => {
                     setSelectedUnit(null);
-                    setSearchTerm('');
+                    setUnitSearchTerm('');
                   }}
                   className="text-xs font-bold text-slate-400 hover:text-rose-400 underline"
                 >
@@ -193,22 +256,20 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
             </div>
           )}
 
-          {/* Results Area */}
-          {cleanQuery.length > 0 && (
+          {/* Search Results */}
+          {cleanUnitQuery.length > 0 && (
             <div className="space-y-3">
               {matchingUnits.length === 0 ? (
-                /* Not Found Box */
                 <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center space-y-2 my-2">
                   <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
                   <p className="text-slate-300 font-bold text-sm">
-                    Unidade não encontrada. Confira o número informado.
+                    Unidade não encontrada no {selectedEmpreendimento.nomeEmpreendimento}.
                   </p>
                   <p className="text-slate-500 text-xs">
                     Tente digitar números como 0101, 0201, 0303, 1510, 2601...
                   </p>
                 </div>
               ) : (
-                /* Matching Units Cards */
                 matchingUnits.map((u) => {
                   const isSelected = selectedUnit?.id === u.id && !isCustom;
                   const precoVendaOficial = u.valorVenda || u.valorFinal;
@@ -276,20 +337,19 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
             </div>
           )}
 
-          {/* Clean State Prompt when query is empty and no unit selected */}
-          {!cleanQuery && !selectedUnit && !isCustom && (
+          {!cleanUnitQuery && !selectedUnit && !isCustom && (
             <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-6 text-center space-y-2 my-2">
               <Home className="w-8 h-8 text-slate-600 mx-auto" />
               <p className="text-slate-300 font-bold text-sm">
                 Digite o número da unidade no campo acima
               </p>
               <p className="text-slate-500 text-xs max-w-sm mx-auto">
-                O sistema buscará instantaneamente o valor de venda e as características oficiais da unidade no Park Jardim do Sol.
+                O sistema buscará instantaneamente o valor de venda e as características oficiais da unidade no {selectedEmpreendimento.nomeEmpreendimento}.
               </p>
             </div>
           )}
 
-          {/* Custom Price Manual Entry (Discrete Option at Bottom) */}
+          {/* Custom Price Manual Entry */}
           <div className="pt-2">
             {!isCustom ? (
               <button

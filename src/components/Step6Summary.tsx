@@ -18,16 +18,18 @@ import {
   FileText
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { McmvSimulationResult, ParkUnit, IntermediariaItem } from '../types';
+import { McmvSimulationResult, ParkUnit, IntermediariaItem, Empreendimento } from '../types';
 import { formatBRL, openWhatsApp, buildWhatsAppText, copyToClipboard } from '../utils/formatters';
 import { generateCrmText, ClientLead } from '../utils/clientStorage';
-import { INC_PROJECT_INFO } from '../data/jardimDoSolData';
+import { generateProposalPdf } from '../utils/pdfGenerator';
+import { FileDown } from 'lucide-react';
 
 interface Step6SummaryProps {
   nomeCliente: string;
   whatsapp?: string;
   email?: string;
   cpf?: string;
+  empreendimento: Empreendimento;
   simulationResult: McmvSimulationResult;
   selectedUnit: ParkUnit | null;
   valorImovel: number;
@@ -48,6 +50,7 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
   whatsapp = '',
   email = '',
   cpf = '',
+  empreendimento,
   simulationResult,
   selectedUnit,
   valorImovel,
@@ -64,6 +67,7 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
 }) => {
   const { income, temDependente, isCotista, parcela } = simulationResult;
   const [copied, setCopied] = useState<boolean>(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   // Entrada Total calculation before Sinal
   const entradaTotalCalculada = Math.max(
@@ -71,13 +75,18 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
     valorImovel - financiamentoCaixa - subsidioCaixa - fgts
   );
 
+  // Dynamic limits from chosen Empreendimento
+  const limitObra = empreendimento.qtdParcelasObra ?? 30;
+  const limitPosObra = empreendimento.qtdParcelasPosObra ?? 78;
+  const maxTotal = empreendimento.maxParcelasEntrada || (limitObra + limitPosObra);
+
   // Intermediarias sum
   const somaInterObra = usarIntermediarias
-    ? intermediarias.filter(i => (i.mes <= 30 || i.fase === 'obra')).reduce((acc, curr) => acc + (curr.valor || 0), 0)
+    ? intermediarias.filter(i => (i.mes <= limitObra || i.fase === 'obra')).reduce((acc, curr) => acc + (curr.valor || 0), 0)
     : 0;
 
   const somaInterPosObra = usarIntermediarias
-    ? intermediarias.filter(i => (i.mes > 30 || i.fase === 'pos_obra')).reduce((acc, curr) => acc + (curr.valor || 0), 0)
+    ? intermediarias.filter(i => (i.mes > limitObra || i.fase === 'pos_obra')).reduce((acc, curr) => acc + (curr.valor || 0), 0)
     : 0;
 
   const somaIntermediarias = somaInterObra + somaInterPosObra;
@@ -86,15 +95,15 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
   const saldoApenasComSinal = Math.max(0, entradaTotalCalculada - sinalAVista);
   const saldoFinalAParcelar = Math.max(0, entradaTotalCalculada - sinalAVista - somaIntermediarias);
 
-  // Split calculations for 108x (30 Obra + 78 Pós-Obra)
-  const qtdObra = Math.min(numParcelasEntrada, 30);
-  const qtdPosObra = Math.max(0, numParcelasEntrada - 30);
+  // Split calculations based on empreendimento configuration
+  const qtdObra = Math.min(numParcelasEntrada, limitObra);
+  const qtdPosObra = Math.max(0, Math.min(limitPosObra, numParcelasEntrada - limitObra));
 
-  const ratioObra = numParcelasEntrada === 108
+  const ratioObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
     ? 0.52194
     : numParcelasEntrada > 0 ? (qtdObra / numParcelasEntrada) : 0;
 
-  const ratioPosObra = numParcelasEntrada === 108
+  const ratioPosObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
     ? 0.47806
     : numParcelasEntrada > 0 ? (qtdPosObra / numParcelasEntrada) : 0;
 
@@ -166,6 +175,33 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
     }
   };
 
+  const handleGeneratePdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      await generateProposalPdf({
+        nomeCliente,
+        whatsapp,
+        email,
+        cpf,
+        empreendimento,
+        selectedUnit,
+        valorImovel,
+        financiamentoCaixa,
+        subsidioCaixa,
+        fgts,
+        sinalAVista,
+        numParcelasEntrada,
+        usarIntermediarias,
+        intermediarias,
+        simulationResult,
+      });
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
@@ -184,7 +220,7 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
               </span>
             </div>
             <h1 className="text-2xl font-black tracking-tight leading-none text-slate-950">
-              PARK JARDIM DO SOL
+              {empreendimento.nomeEmpreendimento.toUpperCase()}
             </h1>
             <p className="text-xs font-bold text-slate-900/90 mt-1">
               Simulador Oficial de Propostas • INC Empreendimentos
@@ -440,12 +476,22 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
           </div>
         </div>
 
-        {/* ACTION BUTTONS: WHATSAPP & COPY CRM */}
-        <div className="space-y-3 mb-4">
+        {/* ACTION BUTTONS: PDF, WHATSAPP & COPY CRM */}
+        <div className="space-y-2.5 mb-4">
+          <button
+            type="button"
+            onClick={handleGeneratePdf}
+            disabled={isGeneratingPdf}
+            className="w-full bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-black text-base py-3.5 px-6 rounded-2xl shadow-xl shadow-teal-950/60 flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+          >
+            <FileDown className="w-5 h-5 text-slate-950" />
+            <span>{isGeneratingPdf ? 'GERANDO PDF...' : 'GERAR PDF DA SIMULAÇÃO'}</span>
+          </button>
+
           <button
             type="button"
             onClick={handleShareWhatsApp}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-base py-4 px-6 rounded-2xl shadow-xl shadow-emerald-950/60 flex items-center justify-center gap-3 active:scale-[0.98] transition-all cursor-pointer"
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-base py-3.5 px-6 rounded-2xl shadow-xl shadow-emerald-950/60 flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all cursor-pointer"
           >
             <MessageSquare className="w-5 h-5 text-slate-950 fill-slate-950" />
             <span>ENVIAR PELO WHATSAPP</span>
@@ -454,10 +500,10 @@ export const Step6Summary: React.FC<Step6SummaryProps> = ({
           <button
             type="button"
             onClick={handleCopyCrmData}
-            className={`w-full font-bold text-sm py-3 px-5 rounded-2xl border transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full font-bold text-xs py-3 px-5 rounded-2xl border transition-all flex items-center justify-center gap-2 cursor-pointer ${
               copied
                 ? 'bg-teal-500 text-slate-950 border-teal-400 font-extrabold'
-                : 'bg-slate-800 hover:bg-slate-750 text-teal-300 border-slate-700'
+                : 'bg-slate-800/80 hover:bg-slate-750 text-teal-300 border-slate-700'
             }`}
           >
             {copied ? (

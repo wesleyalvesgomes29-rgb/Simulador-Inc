@@ -3,7 +3,10 @@ import { ArrowRight, ChevronLeft, DollarSign, Wallet, Building2, Sparkles, Check
 import { motion } from 'motion/react';
 import { formatBRL, parseBRLInput } from '../utils/formatters';
 
+import { Empreendimento } from '../types';
+
 interface Step4ValoresClienteProps {
+  empreendimento?: Empreendimento;
   valorImovel: number;
   financiamentoCaixa: number;
   subsidioCaixa: number;
@@ -14,6 +17,7 @@ interface Step4ValoresClienteProps {
 }
 
 export const Step4ValoresCliente: React.FC<Step4ValoresClienteProps> = ({
+  empreendimento,
   valorImovel,
   financiamentoCaixa,
   subsidioCaixa,
@@ -88,7 +92,7 @@ export const Step4ValoresCliente: React.FC<Step4ValoresClienteProps> = ({
                 </span>
               </div>
               <span className="text-xs font-bold text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">
-                Park Jardim do Sol
+                {empreendimento?.nomeEmpreendimento || 'Empreendimento INC'}
               </span>
             </div>
 

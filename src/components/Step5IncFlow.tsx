@@ -17,11 +17,12 @@ import {
   Equal
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { IntermediariaItem } from '../types';
+import { IntermediariaItem, Empreendimento } from '../types';
 import { INC_PROJECT_INFO } from '../data/jardimDoSolData';
 import { formatBRL, parseBRLInput } from '../utils/formatters';
 
 interface Step5IncFlowProps {
+  empreendimento: Empreendimento;
   valorEntradaTotal: number;
   sinalAVista: number;
   setSinalAVista: (val: number) => void;
@@ -36,6 +37,7 @@ interface Step5IncFlowProps {
 }
 
 export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
+  empreendimento,
   valorEntradaTotal,
   sinalAVista,
   setSinalAVista,
@@ -56,26 +58,49 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
     sinalAVista > 0 ? formatBRL(sinalAVista) : ''
   );
 
-  // Preset installment options up to 108x
-  const PARCELA_OPTIONS = [12, 24, 30, 36, 48, 60, 72, 84, 96, 108];
+  // Dynamic limits from chosen Empreendimento
+  const limitObra = empreendimento.qtdParcelasObra ?? 30;
+  const limitPosObra = empreendimento.qtdParcelasPosObra ?? 78;
+  const maxTotal = empreendimento.maxParcelasEntrada || (limitObra + limitPosObra);
+
+  // Preset installment options based on empreendimento maxTotal and limitObra
+  const baseOptions = [12, limitObra, 24, 36, 48, 60, 72, 84, 96, 108, maxTotal];
+  const PARCELA_OPTIONS = Array.from(new Set(baseOptions.filter(n => n <= maxTotal))).sort((a, b) => a - b);
 
   // Load Official PDF Reference Presets
   const handleUsarFluxoPadrao = () => {
     setModoFluxo('padrao');
-    setSinalAVista(40000);
-    setDisplaySinalInput(formatBRL(40000));
-    setNumParcelasEntrada(108);
-    setUsarIntermediarias(true);
+    const isEspanha = empreendimento.id === 'park-espanha';
 
-    const pdfIntermediarias: IntermediariaItem[] = [
-      { id: 'int-2026', mes: 12, data: '12/20/2026', rotulo: '12º mês (12/2026)', valor: 2000, fase: 'obra' },
-      { id: 'int-2027', mes: 24, data: '12/20/2027', rotulo: '24º mês (12/2027)', valor: 2000, fase: 'obra' },
-      { id: 'int-2028', mes: 36, data: '12/20/2028', rotulo: '36º mês (12/2028)', valor: 2000, fase: 'obra' },
-      { id: 'int-2029', mes: 48, data: '12/20/2029', rotulo: '48º mês (12/2029)', valor: 2000, fase: 'obra' },
-      { id: 'int-2030', mes: 60, data: '12/20/2030', rotulo: '60º mês (12/2030)', valor: 2000, fase: 'pos_obra' },
-      { id: 'int-2031', mes: 72, data: '12/20/2031', rotulo: '72º mês (12/2031)', valor: 2000, fase: 'pos_obra' },
-    ];
-    setIntermediarias(pdfIntermediarias);
+    if (isEspanha) {
+      setSinalAVista(0);
+      setDisplaySinalInput(formatBRL(0));
+      setNumParcelasEntrada(maxTotal);
+      setUsarIntermediarias(true);
+
+      const espanhaIntermediarias: IntermediariaItem[] = [
+        { id: 'int-1', mes: 12, rotulo: '12º mês (Obra)', valor: 2000, fase: 'obra' },
+        { id: 'int-2', mes: 24, rotulo: '24º mês (Pós-Obra)', valor: 2000, fase: 'pos_obra' },
+        { id: 'int-3', mes: 36, rotulo: '36º mês (Pós-Obra)', valor: 2000, fase: 'pos_obra' },
+        { id: 'int-4', mes: 48, rotulo: '48º mês (Pós-Obra)', valor: 2000, fase: 'pos_obra' },
+      ];
+      setIntermediarias(espanhaIntermediarias);
+    } else {
+      setSinalAVista(40000);
+      setDisplaySinalInput(formatBRL(40000));
+      setNumParcelasEntrada(maxTotal);
+      setUsarIntermediarias(true);
+
+      const pdfIntermediarias: IntermediariaItem[] = [
+        { id: 'int-2026', mes: 12, data: '12/20/2026', rotulo: '12º mês (12/2026)', valor: 2000, fase: 'obra' },
+        { id: 'int-2027', mes: 24, data: '12/20/2027', rotulo: '24º mês (12/2027)', valor: 2000, fase: 'obra' },
+        { id: 'int-2028', mes: 36, data: '12/20/2028', rotulo: '36º mês (12/2028)', valor: 2000, fase: 'obra' },
+        { id: 'int-2029', mes: 48, data: '12/20/2029', rotulo: '48º mês (12/2029)', valor: 2000, fase: 'obra' },
+        { id: 'int-2030', mes: 60, data: '12/20/2030', rotulo: '60º mês (12/2030)', valor: 2000, fase: 'pos_obra' },
+        { id: 'int-2031', mes: 72, data: '12/20/2031', rotulo: '72º mês (12/2031)', valor: 2000, fase: 'pos_obra' },
+      ];
+      setIntermediarias(pdfIntermediarias);
+    }
   };
 
   const handlePersonalizarFluxo = () => {
@@ -94,33 +119,29 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
     ? intermediarias.reduce((acc, curr) => acc + (curr.valor || 0), 0)
     : 0;
 
-  // Split Intermediarias between Obra (mes <= 30) and Pós-Obra (mes > 30)
+  // Split Intermediarias between Obra (mes <= limitObra) and Pós-Obra (mes > limitObra)
   const somaInterObra = usarIntermediarias
-    ? intermediarias.filter(i => i.mes <= 30 || i.fase === 'obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
+    ? intermediarias.filter(i => i.mes <= limitObra || i.fase === 'obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
     : 0;
 
   const somaInterPosObra = usarIntermediarias
-    ? intermediarias.filter(i => i.mes > 30 || i.fase === 'pos_obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
+    ? intermediarias.filter(i => i.mes > limitObra || i.fase === 'pos_obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
     : 0;
 
-  // MATHEMATICAL VALIDATION:
-  // 1. Total Entrada INC (Pró-Soluto)
-  // 2. menos Sinal
-  // 3. menos Intermediárias
-  // 4. igual Saldo a Parcelar
+  // MATHEMATICAL VALIDATION
   const saldoApenasComSinal = Math.max(0, valorEntradaTotal - sinalAVista);
   const saldoFinalAParcelar = Math.max(0, valorEntradaTotal - sinalAVista - somaIntermediarias);
 
-  // Split calculations for Obra (up to 30x) vs Pós-Obra (up to remaining <= 108x)
-  const qtdObra = Math.min(numParcelasEntrada, 30);
-  const qtdPosObra = Math.max(0, numParcelasEntrada - 30);
+  // Split calculations based on empreendimento configuration
+  const qtdObra = Math.min(numParcelasEntrada, limitObra);
+  const qtdPosObra = Math.max(0, Math.min(limitPosObra, numParcelasEntrada - limitObra));
 
-  // Split proportions (when 108x, standard split is 12,01% Obra & 11,00% Pós-Obra)
-  const ratioObra = numParcelasEntrada === 108
+  // Split proportions
+  const ratioObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
     ? 0.52194
     : numParcelasEntrada > 0 ? (qtdObra / numParcelasEntrada) : 0;
 
-  const ratioPosObra = numParcelasEntrada === 108
+  const ratioPosObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
     ? 0.47806
     : numParcelasEntrada > 0 ? (qtdPosObra / numParcelasEntrada) : 0;
 
@@ -150,7 +171,7 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
             const mesNum = Number(value) || 12;
             updated.mes = mesNum;
             updated.rotulo = `${mesNum}º mês`;
-            updated.fase = mesNum > 30 ? 'pos_obra' : 'obra';
+            updated.fase = mesNum > limitObra ? 'pos_obra' : 'obra';
           }
           return updated;
         }
@@ -165,7 +186,7 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
 
     const nextCount = intermediarias.length + 1;
     const nextMes = nextCount * 12;
-    const isPos = nextMes > 30;
+    const isPos = nextMes > limitObra;
 
     const newItem: IntermediariaItem = {
       id: `int-custom-${Date.now()}`,
@@ -325,16 +346,28 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
             </div>
           </div>
 
-          {/* 3. PARCELAMENTO MENSAL (ATÉ 108X) */}
+          {/* 3. PARCELAMENTO MENSAL (ATÉ {maxTotal}X) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-teal-400" />
-                Quantidade de Parcelas da Entrada (Até 108x)
+                Quantidade de Parcelas da Entrada (Até {maxTotal}x)
               </label>
-              <span className="text-sm font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
-                {numParcelasEntrada}x
-              </span>
+              <div className="flex items-center gap-1.5 bg-slate-950 border border-emerald-500/40 px-2 py-1 rounded-xl">
+                <input
+                  type="number"
+                  min="1"
+                  max={maxTotal}
+                  value={numParcelasEntrada || ''}
+                  onChange={(e) => {
+                    const val = Math.min(maxTotal, Math.max(1, Number(e.target.value) || 1));
+                    setNumParcelasEntrada(val);
+                    setModoFluxo('personalizado');
+                  }}
+                  className="w-14 bg-transparent text-right font-black text-emerald-400 text-sm outline-none"
+                />
+                <span className="text-xs font-extrabold text-slate-400">x</span>
+              </div>
             </div>
 
             {/* Quick Button Selector */}
@@ -363,8 +396,8 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
               <input
                 type="range"
                 min="12"
-                max="108"
-                step="6"
+                max={maxTotal}
+                step="1"
                 value={numParcelasEntrada}
                 onChange={(e) => {
                   setNumParcelasEntrada(Number(e.target.value));
@@ -374,9 +407,8 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
               />
               <div className="flex justify-between text-[10px] font-bold text-slate-500 mt-1">
                 <span>12x</span>
-                <span>30x (Obra)</span>
-                <span>60x</span>
-                <span>108x (Máximo PDF)</span>
+                <span>{limitObra}x (Obra)</span>
+                <span>{maxTotal}x (Máximo)</span>
               </div>
             </div>
           </div>
@@ -436,10 +468,10 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                         }
                         className="w-full bg-slate-950 border border-slate-700 text-white font-bold text-xs rounded-lg px-2 py-1.5 outline-none focus:border-teal-400"
                       >
-                        {[12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108].map(
+                        {[12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108].filter(m => m <= maxTotal).map(
                           (m) => (
                             <option key={m} value={m}>
-                              {m}º Mês {m <= 30 ? '(Obra)' : '(Pós-Obra)'}
+                              {m}º Mês {m <= limitObra ? '(Obra)' : '(Pós-Obra)'}
                             </option>
                           )
                         )}

@@ -189,7 +189,7 @@ export const Step3McmvResult: React.FC<Step3McmvResultProps> = ({
           className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm md:text-base py-4 px-6 rounded-2xl shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer"
         >
           <Building2 className="w-5 h-5 text-slate-950" />
-          <span>CONTINUAR PARA O JARDIM DO SOL</span>
+          <span>CONTINUAR PARA O EMPREENDIMENTO</span>
           <ArrowRight className="w-5 h-5 text-slate-950" />
         </button>
       </div>
