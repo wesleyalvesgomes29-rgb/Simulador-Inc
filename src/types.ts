@@ -33,6 +33,27 @@ export interface McmvSimulationResult {
   enquadramentoNotice?: string;
 }
 
+export interface Empreendimento {
+  id: string;
+  nomeEmpreendimento: string; // e.g. "PARK JARDIM DO SOL" or "Park Espanha"
+  construtora: string;
+  localizacao: string;
+  previsaoEntrega: string;
+  avaliacaoCaixaInterna?: number;
+  valorTabelaImovel?: number;
+  maxParcelasEntrada: number;
+  qtdParcelasObra?: number;
+  qtdParcelasPosObra?: number;
+  registroItbiTotal: number;
+  registroItbiParcelas: number;
+  registroItbiValorParcela: number;
+  tarifaBancaria: number;
+  correcaoObra: string;
+  correcaoPosObra: string;
+  observacoes: string[];
+  units: ParkUnit[];
+}
+
 export interface ParkUnit {
   id: string;
   unidade: string; // e.g. "0101"

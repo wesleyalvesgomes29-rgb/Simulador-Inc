@@ -10,10 +10,12 @@ import {
   McmvBracket, 
   McmvSimulationResult, 
   ParkUnit, 
-  IntermediariaItem 
+  IntermediariaItem,
+  Empreendimento
 } from './types';
 import { INITIAL_MCMV_DATA, lookupMcmvTable } from './data/mcmvData';
 import { INITIAL_PARK_UNITS } from './data/jardimDoSolData';
+import { JARDIM_DO_SOL_EMPREENDIMENTO } from './data/developmentsData';
 import { Header } from './components/Header';
 import { StepIndicator } from './components/StepIndicator';
 import { Step2ClientData } from './components/Step2ClientData';
@@ -42,9 +44,10 @@ export default function App() {
 
   // MCMV & Unit Datasets
   const [mcmvData, setMcmvData] = useState<McmvBracket[]>(INITIAL_MCMV_DATA);
-  const [parkUnits, setParkUnits] = useState<ParkUnit[]>(INITIAL_PARK_UNITS);
 
-  // Selected Unit & Property Value
+  // Selected Development, Unit & Property Value
+  const [selectedEmpreendimento, setSelectedEmpreendimento] = useState<Empreendimento>(JARDIM_DO_SOL_EMPREENDIMENTO);
+  const [parkUnits, setParkUnits] = useState<ParkUnit[]>(INITIAL_PARK_UNITS);
   const [selectedUnit, setSelectedUnit] = useState<ParkUnit | null>(INITIAL_PARK_UNITS[0]);
   const [valorImovel, setValorImovel] = useState<number>(INITIAL_PARK_UNITS[0].valorFinal);
 
@@ -226,11 +229,13 @@ export default function App() {
           {currentStep === 'escolha_imovel' && (
             <Step3EscolhaImovel
               key="escolha_imovel"
+              selectedEmpreendimento={selectedEmpreendimento}
+              setSelectedEmpreendimento={setSelectedEmpreendimento}
               selectedUnit={selectedUnit}
               setSelectedUnit={setSelectedUnit}
               valorImovel={valorImovel}
               setValorImovel={setValorImovel}
-              availableUnits={parkUnits}
+              setNumParcelasEntrada={setNumParcelasEntrada}
               onNext={() => {
                 autoSaveLead('Em Atendimento');
                 setCurrentStep('valores_cliente');
@@ -242,6 +247,7 @@ export default function App() {
           {currentStep === 'valores_cliente' && (
             <Step4ValoresCliente
               key="valores_cliente"
+              empreendimento={selectedEmpreendimento}
               valorImovel={valorImovel}
               financiamentoCaixa={financiamentoCaixa}
               subsidioCaixa={subsidioCaixa}
@@ -258,6 +264,7 @@ export default function App() {
           {currentStep === 'fluxo_inc' && (
             <Step5IncFlow
               key="fluxo_inc"
+              empreendimento={selectedEmpreendimento}
               valorEntradaTotal={valorEntradaTotal}
               sinalAVista={sinalAVista}
               setSinalAVista={setSinalAVista}
@@ -282,6 +289,7 @@ export default function App() {
               whatsapp={whatsapp}
               email={email}
               cpf={cpf}
+              empreendimento={selectedEmpreendimento}
               simulationResult={simulationResult}
               selectedUnit={selectedUnit}
               valorImovel={valorImovel}
