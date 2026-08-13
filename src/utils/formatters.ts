@@ -46,6 +46,7 @@ export function formatBRLInputFromNumber(amount: number): string {
  * Generates formatted text for WhatsApp share
  */
 export interface WhatsAppMessageData {
+  nomeEmpreendimento?: string;
   nomeCliente?: string;
   valorImovel: number;
   financiamentoCaixa: number;
@@ -67,7 +68,7 @@ export function buildWhatsAppText(data: WhatsAppMessageData): string {
     ? `Olá, *${data.nomeCliente.trim()}*!`
     : 'Olá!';
 
-  let message = `${saudacao} Confira a proposta oficial do *PARK JARDIM DO SOL* (INC Empreendimentos):\n\n`;
+  let message = `${saudacao} Confira a proposta oficial do *${data.nomeEmpreendimento ? data.nomeEmpreendimento.toUpperCase() : 'PARK JARDIM DO SOL'}* (INC Empreendimentos):\n\n`;
   message += `🏠 *Valor do Imóvel:* ${formatBRL(data.valorImovel)}\n`;
   message += `🏦 *Financiamento CAIXA:* ${formatBRL(data.financiamentoCaixa)}\n`;
   if (data.subsidio > 0) {

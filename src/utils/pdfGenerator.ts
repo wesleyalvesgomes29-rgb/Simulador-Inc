@@ -40,11 +40,23 @@ export async function generateProposalPdf(params: GeneratePdfParams): Promise<vo
     simulationResult,
   } = params;
 
-  // Calculate Entry Total
-  const valorEntradaTotal = Math.max(0, valorImovel - financiamentoCaixa - subsidioCaixa - fgts);
-  const somaIntermediarias = usarIntermediarias
-    ? intermediarias.reduce((acc, curr) => acc + (curr.valor || 0), 0)
+  // Calculate Entry Total with 23% cap for Park Jardim do Sol
+  const isJardimDoSol = empreendimento.id === 'park-jardim-do-sol';
+  const isEspanha = empreendimento.id === 'park-espanha';
+  const saldoRealOperacao = Math.max(0, valorImovel - financiamentoCaixa - subsidioCaixa - fgts);
+  const proSolutoMax = valorImovel * 0.23;
+  const valorEntradaTotal = isJardimDoSol
+    ? Math.min(saldoRealOperacao, proSolutoMax)
+    : saldoRealOperacao;
+
+  const somaInterObra = usarIntermediarias
+    ? intermediarias.filter(i => i.mes <= (empreendimento.qtdParcelasObra ?? 30) || i.fase === 'obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
     : 0;
+  const somaInterPosObra = usarIntermediarias
+    ? intermediarias.filter(i => i.mes > (empreendimento.qtdParcelasObra ?? 30) || i.fase === 'pos_obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
+    : 0;
+  const somaIntermediarias = somaInterObra + somaInterPosObra;
+
   const saldoFinalAParcelar = Math.max(0, valorEntradaTotal - sinalAVista - somaIntermediarias);
 
   // Dynamic limits from chosen Empreendimento
@@ -56,27 +68,27 @@ export async function generateProposalPdf(params: GeneratePdfParams): Promise<vo
   const qtdPosObra = Math.max(0, Math.min(limitPosObra, numParcelasEntrada - limitObra));
 
   const saldoApenasComSinal = Math.max(0, valorEntradaTotal - sinalAVista);
-  const ratioObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
-    ? 0.52194
-    : numParcelasEntrada > 0 ? (qtdObra / numParcelasEntrada) : 0;
-
-  const ratioPosObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
-    ? 0.47806
-    : numParcelasEntrada > 0 ? (qtdPosObra / numParcelasEntrada) : 0;
-
-  const somaInterObra = usarIntermediarias
-    ? intermediarias.filter(i => i.mes <= limitObra || i.fase === 'obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
-    : 0;
-  const somaInterPosObra = usarIntermediarias
-    ? intermediarias.filter(i => i.mes > limitObra || i.fase === 'pos_obra').reduce((acc, curr) => acc + (curr.valor || 0), 0)
-    : 0;
-
-  const saldoBaseObra = saldoApenasComSinal * ratioObra;
-  const saldoBasePosObra = saldoApenasComSinal * ratioPosObra;
-
-  const valorParcelaObra = qtdObra > 0 ? Math.max(0, saldoBaseObra - somaInterObra) / qtdObra : 0;
-  const valorParcelaPosObra = qtdPosObra > 0 ? Math.max(0, saldoBasePosObra - somaInterPosObra) / qtdPosObra : 0;
   const valorParcelaUnica = numParcelasEntrada > 0 ? Math.max(0, saldoFinalAParcelar) / numParcelasEntrada : 0;
+
+  let valorParcelaObra = 0;
+  let valorParcelaPosObra = 0;
+
+  if (numParcelasEntrada > 0) {
+    if (isJardimDoSol || isEspanha) {
+      // Balanced monthly installments for Park Jardim do Sol and Park Espanha
+      valorParcelaObra = qtdObra > 0 ? valorParcelaUnica : 0;
+      valorParcelaPosObra = qtdPosObra > 0 ? valorParcelaUnica : 0;
+    } else {
+      // Standard proportional split for other developments
+      const ratioObra = qtdObra / numParcelasEntrada;
+      const ratioPosObra = qtdPosObra / numParcelasEntrada;
+      const saldoBaseObra = saldoApenasComSinal * ratioObra;
+      const saldoBasePosObra = saldoApenasComSinal * ratioPosObra;
+
+      valorParcelaObra = qtdObra > 0 ? Math.max(0, saldoBaseObra - somaInterObra) / qtdObra : 0;
+      valorParcelaPosObra = qtdPosObra > 0 ? Math.max(0, saldoBasePosObra - somaInterPosObra) / qtdPosObra : 0;
+    }
+  }
 
   // Create temporary offscreen container for PDF rendering
   const container = document.createElement('div');
@@ -85,122 +97,122 @@ export async function generateProposalPdf(params: GeneratePdfParams): Promise<vo
   container.style.top = '-9999px';
   container.style.width = '800px';
   container.style.padding = '32px';
-  container.style.backgroundColor = '#020617'; // Slate 950
-  container.style.color = '#f8fafc';
+  container.style.backgroundColor = '#0A0A0A';
+  container.style.color = '#FFFFFF';
   container.style.fontFamily = 'system-ui, -apple-system, sans-serif';
 
   container.innerHTML = `
-    <div style="border: 2px solid #0d9488; border-radius: 16px; padding: 24px; background-color: #0f172a;">
+    <div style="border: 2px solid #2A2A2A; border-radius: 16px; padding: 24px; background-color: #111111;">
       <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 16px; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2A2A2A; padding-bottom: 16px; margin-bottom: 20px;">
         <div>
-          <h1 style="font-size: 24px; font-weight: 900; color: #10b981; margin: 0; text-transform: uppercase;">INC EMPREENDIMENTOS</h1>
-          <p style="font-size: 14px; font-weight: 700; color: #94a3b8; margin: 4px 0 0 0;">PROPOSTA COMERCIAL • ${empreendimento.nomeEmpreendimento.toUpperCase()}</p>
+          <h1 style="font-size: 24px; font-weight: 900; color: #FF600B; margin: 0; text-transform: uppercase;">INC EMPREENDIMENTOS</h1>
+          <p style="font-size: 14px; font-weight: 700; color: #B5B5B5; margin: 4px 0 0 0;">PROPOSTA COMERCIAL • ${empreendimento.nomeEmpreendimento.toUpperCase()}</p>
         </div>
         <div style="text-align: right;">
-          <span style="background-color: #059669; color: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-block;">
+          <span style="background-color: #FF600B; color: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-block;">
             PROPOSTA COMERCIAL
           </span>
-          <p style="font-size: 11px; color: #64748b; margin: 6px 0 0 0;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</p>
+          <p style="font-size: 11px; color: #B5B5B5; margin: 6px 0 0 0;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</p>
         </div>
       </div>
 
       <!-- Customer Info -->
-      <div style="background-color: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <h3 style="font-size: 12px; font-weight: 800; color: #14b8a6; text-transform: uppercase; margin: 0 0 10px 0;">DADOS DO CLIENTE</h3>
+      <div style="background-color: #161616; border: 1px solid #2A2A2A; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 12px; font-weight: 800; color: #FF600B; text-transform: uppercase; margin: 0 0 10px 0;">DADOS DO CLIENTE</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-          <div><strong>Cliente:</strong> ${nomeCliente || 'Não informado'}</div>
-          <div><strong>WhatsApp:</strong> ${whatsapp || 'Não informado'}</div>
-          ${email ? `<div><strong>E-mail:</strong> ${email}</div>` : ''}
-          ${cpf ? `<div><strong>CPF:</strong> ${cpf}</div>` : ''}
-          <div><strong>Renda Bruta:</strong> ${formatBRL(simulationResult.income)}</div>
-          <div><strong>Perfil:</strong> ${simulationResult.perfilLabel}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Cliente:</strong> ${nomeCliente || 'Não informado'}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">WhatsApp:</strong> ${whatsapp || 'Não informado'}</div>
+          ${email ? `<div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">E-mail:</strong> ${email}</div>` : ''}
+          ${cpf ? `<div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">CPF:</strong> ${cpf}</div>` : ''}
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Renda Bruta:</strong> ${formatBRL(simulationResult.income)}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Perfil:</strong> ${simulationResult.perfilLabel}</div>
         </div>
       </div>
 
       <!-- Property Details (NO AVALIAÇÃO CAIXA) -->
-      <div style="background-color: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <h3 style="font-size: 12px; font-weight: 800; color: #14b8a6; text-transform: uppercase; margin: 0 0 10px 0;">IMÓVEL SELECIONADO</h3>
+      <div style="background-color: #161616; border: 1px solid #2A2A2A; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 12px; font-weight: 800; color: #FF600B; text-transform: uppercase; margin: 0 0 10px 0;">IMÓVEL SELECIONADO</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-          <div><strong>Empreendimento:</strong> ${empreendimento.nomeEmpreendimento}</div>
-          <div><strong>Localização:</strong> ${empreendimento.localizacao}</div>
-          <div><strong>Unidade:</strong> ${selectedUnit ? selectedUnit.unidade : 'Geral'}</div>
-          <div><strong>Tipologia:</strong> ${selectedUnit ? selectedUnit.tipologia : 'Padrão'}</div>
-          <div><strong>Área Privativa:</strong> ${selectedUnit ? `${selectedUnit.areaM2} m²` : 'Padrão'}</div>
-          <div><strong>Vaga de Garagem:</strong> ${selectedUnit ? selectedUnit.vagas : 'DESCOBERTA'}</div>
-          <div style="grid-column: span 2; background-color: #0f172a; padding: 10px; border-radius: 8px; margin-top: 6px;">
-            <strong style="color: #34d399; font-size: 16px;">VALOR DE VENDA DO IMÓVEL: ${formatBRL(valorImovel)}</strong>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Empreendimento:</strong> ${empreendimento.nomeEmpreendimento}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Localização:</strong> ${empreendimento.localizacao}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Unidade:</strong> ${selectedUnit ? selectedUnit.unidade : 'Geral'}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Tipologia:</strong> ${selectedUnit ? selectedUnit.tipologia : 'Padrão'}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Área Privativa:</strong> ${selectedUnit ? `${selectedUnit.areaM2} m²` : 'Padrão'}</div>
+          <div style="color: #B5B5B5;"><strong style="color: #FFFFFF;">Vaga de Garagem:</strong> ${selectedUnit ? selectedUnit.vagas : 'DESCOBERTA'}</div>
+          <div style="grid-column: span 2; background-color: #111111; border: 1px solid #2A2A2A; padding: 10px; border-radius: 8px; margin-top: 6px;">
+            <strong style="color: #FF600B; font-size: 16px;">VALOR DE VENDA DO IMÓVEL: ${formatBRL(valorImovel)}</strong>
           </div>
         </div>
       </div>
 
       <!-- Financing & Subsidies Breakdown -->
-      <div style="background-color: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <h3 style="font-size: 12px; font-weight: 800; color: #14b8a6; text-transform: uppercase; margin: 0 0 10px 0;">COMPOSIÇÃO DE FINANCIAMENTO CAIXA / SUBSÍDIO</h3>
+      <div style="background-color: #161616; border: 1px solid #2A2A2A; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 12px; font-weight: 800; color: #FF600B; text-transform: uppercase; margin: 0 0 10px 0;">COMPOSIÇÃO DE FINANCIAMENTO CAIXA / SUBSÍDIO</h3>
         <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
-          <span>Financiamento estimado CAIXA:</span>
-          <strong>${formatBRL(financiamentoCaixa)}</strong>
+          <span style="color: #B5B5B5;">Financiamento estimado CAIXA:</span>
+          <strong style="color: #FFFFFF;">${formatBRL(financiamentoCaixa)}</strong>
         </div>
         ${simulationResult.parcela > 0 ? `
         <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
-          <span>Parcela estimada CAIXA:</span>
-          <strong style="color: #38bdf8;">${formatBRL(simulationResult.parcela)}</strong>
+          <span style="color: #B5B5B5;">Parcela estimada CAIXA:</span>
+          <strong style="color: #FF600B;">${formatBRL(simulationResult.parcela)}</strong>
         </div>
         ` : ''}
         <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
-          <span>Subsídio MCMV (${simulationResult.faixa}):</span>
-          <strong style="color: #34d399;">${formatBRL(subsidioCaixa)}</strong>
+          <span style="color: #B5B5B5;">Subsídio MCMV (${simulationResult.faixa}):</span>
+          <strong style="color: #FF600B;">${formatBRL(subsidioCaixa)}</strong>
         </div>
         ${fgts > 0 ? `
         <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
-          <span>Uso de Saldo FGTS:</span>
-          <strong>${formatBRL(fgts)}</strong>
+          <span style="color: #B5B5B5;">Uso de Saldo FGTS:</span>
+          <strong style="color: #FFFFFF;">${formatBRL(fgts)}</strong>
         </div>
         ` : ''}
-        <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid #334155; font-size: 15px; font-weight: 900; color: #10b981;">
+        <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid #2A2A2A; font-size: 15px; font-weight: 900; color: #FF600B;">
           <span>TOTAL A SER PAGO À CONSTRUTORA (INC):</span>
           <span>${formatBRL(valorEntradaTotal)}</span>
         </div>
       </div>
 
       <!-- INC Entry Flow Breakdown -->
-      <div style="background-color: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <h3 style="font-size: 12px; font-weight: 800; color: #14b8a6; text-transform: uppercase; margin: 0 0 10px 0;">FLUXO DE PAGAMENTO DA ENTRADA COM A INC</h3>
+      <div style="background-color: #161616; border: 1px solid #2A2A2A; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 12px; font-weight: 800; color: #FF600B; text-transform: uppercase; margin: 0 0 10px 0;">FLUXO DE PAGAMENTO DA ENTRADA COM A INC</h3>
         
         ${sinalAVista > 0 ? `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; background-color: #0f172a; padding: 8px 12px; border-radius: 6px;">
-          <span>Sinal / Entrada Inicial:</span>
-          <strong style="color: #fbbf24;">${formatBRL(sinalAVista)}</strong>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; background-color: #111111; border: 1px solid #2A2A2A; padding: 8px 12px; border-radius: 6px;">
+          <span style="color: #B5B5B5;">Sinal / Entrada Inicial:</span>
+          <strong style="color: #FF600B;">${formatBRL(sinalAVista)}</strong>
         </div>
         ` : ''}
 
         ${qtdPosObra > 0 ? `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-          <div style="background-color: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #059669;">
-            <div style="font-size: 11px; font-weight: 800; color: #34d399;">PARCELAS DURANTE A OBRA (${qtdObra}x)</div>
-            <div style="font-size: 18px; font-weight: 900; color: #ffffff; margin-top: 4px;">${formatBRL(valorParcelaObra)}</div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Correção pelo INCC</div>
+          <div style="background-color: #111111; padding: 12px; border-radius: 8px; border: 1px solid #FF600B;">
+            <div style="font-size: 11px; font-weight: 800; color: #FF600B;">PARCELAS DURANTE A OBRA (${qtdObra}x)</div>
+            <div style="font-size: 18px; font-weight: 900; color: #FFFFFF; margin-top: 4px;">${formatBRL(valorParcelaObra)}</div>
+            <div style="font-size: 10px; color: #B5B5B5; margin-top: 2px;">Correção pelo INCC</div>
           </div>
-          <div style="background-color: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #0d9488;">
-            <div style="font-size: 11px; font-weight: 800; color: #2dd4bf;">PARCELAS PÓS-OBRA (${qtdPosObra}x)</div>
-            <div style="font-size: 18px; font-weight: 900; color: #ffffff; margin-top: 4px;">${formatBRL(valorParcelaPosObra)}</div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">IPCA + 1,99% a.a.</div>
+          <div style="background-color: #111111; padding: 12px; border-radius: 8px; border: 1px solid #2A2A2A;">
+            <div style="font-size: 11px; font-weight: 800; color: #FF600B;">PARCELAS PÓS-OBRA (${qtdPosObra}x)</div>
+            <div style="font-size: 18px; font-weight: 900; color: #FFFFFF; margin-top: 4px;">${formatBRL(valorParcelaPosObra)}</div>
+            <div style="font-size: 10px; color: #B5B5B5; margin-top: 2px;">IPCA + 1,99% a.a.</div>
           </div>
         </div>
         ` : `
-        <div style="background-color: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #059669; margin-bottom: 12px;">
-          <div style="font-size: 11px; font-weight: 800; color: #34d399;">PARCELAS DURANTE A OBRA (${numParcelasEntrada}x)</div>
-          <div style="font-size: 20px; font-weight: 900; color: #ffffff; margin-top: 4px;">${formatBRL(valorParcelaUnica)}</div>
-          <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Correção pelo INCC</div>
+        <div style="background-color: #111111; padding: 12px; border-radius: 8px; border: 1px solid #FF600B; margin-bottom: 12px;">
+          <div style="font-size: 11px; font-weight: 800; color: #FF600B;">PARCELAS DURANTE A OBRA (${numParcelasEntrada}x)</div>
+          <div style="font-size: 20px; font-weight: 900; color: #FFFFFF; margin-top: 4px;">${formatBRL(valorParcelaUnica)}</div>
+          <div style="font-size: 10px; color: #B5B5B5; margin-top: 2px;">Correção pelo INCC</div>
         </div>
         `}
 
         ${usarIntermediarias && intermediarias.length > 0 ? `
-        <div style="margin-top: 10px; background-color: #0f172a; padding: 10px; border-radius: 8px;">
-          <div style="font-size: 11px; font-weight: 800; color: #2dd4bf; margin-bottom: 6px;">INTERMEDIÁRIAS / BALÕES ANUAIS (${intermediarias.length}x)</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px;">
+        <div style="margin-top: 10px; background-color: #111111; border: 1px solid #2A2A2A; padding: 10px; border-radius: 8px;">
+          <div style="font-size: 11px; font-weight: 800; color: #FF600B; margin-bottom: 6px;">INTERMEDIÁRIAS / BALÕES ANUAIS (${intermediarias.length}x)</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #B5B5B5;">
             ${intermediarias.map(item => `
-              <div>• ${item.rotulo}: <strong>${formatBRL(item.valor)}</strong></div>
+              <div>• ${item.rotulo}: <strong style="color: #FFFFFF;">${formatBRL(item.valor)}</strong></div>
             `).join('')}
           </div>
         </div>
@@ -208,8 +220,8 @@ export async function generateProposalPdf(params: GeneratePdfParams): Promise<vo
       </div>
 
       <!-- Legal / Observations -->
-      <div style="font-size: 10px; color: #94a3b8; line-height: 1.4; border-top: 1px solid #1e293b; padding-top: 12px;">
-        <p style="margin: 0 0 4px 0;"><strong>Condições Importantes:</strong> Documentação (Registro + ITBI) R$ 6.800,00 parcelado em 36x de R$ 188,89 + Tarifa R$ 1.000,00.</p>
+      <div style="font-size: 10px; color: #B5B5B5; line-height: 1.4; border-top: 1px solid #2A2A2A; padding-top: 12px;">
+        <p style="margin: 0 0 4px 0;"><strong style="color: #FFFFFF;">Condições Importantes:</strong> Documentação (Registro + ITBI) R$ 6.800,00 parcelado em 36x de R$ 188,89 + Tarifa R$ 1.000,00.</p>
         <p style="margin: 0 0 4px 0;">Obrigatória apresentação de fiador com CPF regular e renda comprovada.</p>
         <p style="margin: 0;">Esta é apenas uma simulação comercial sem valor de contrato formal. Preços e condições sujeitos a alteração sem aviso prévio.</p>
       </div>
@@ -221,7 +233,7 @@ export async function generateProposalPdf(params: GeneratePdfParams): Promise<vo
   try {
     const canvas = await html2canvas(container, {
       scale: 2,
-      backgroundColor: '#020617',
+      backgroundColor: '#0A0A0A',
       useCORS: true,
     });
 
