@@ -74,11 +74,18 @@ export default function App() {
     mcmvData
   );
 
-  // Entry Total calculation
-  const valorEntradaTotal = Math.max(
+  // Real Operation Balance
+  const saldoRealOperacao = Math.max(
     0,
     valorImovel - financiamentoCaixa - subsidioCaixa - fgts
   );
+
+  // Pro-Soluto Entry calculation (Capped at 23% for Park Jardim do Sol)
+  const isJardimDoSol = selectedEmpreendimento.id === 'park-jardim-do-sol';
+  const proSolutoMax = valorImovel * 0.23;
+  const valorEntradaTotal = isJardimDoSol
+    ? Math.min(saldoRealOperacao, proSolutoMax)
+    : saldoRealOperacao;
 
   // Helper to persist/sync active simulation state to local storage for the broker
   const autoSaveLead = (statusStr: 'Em Atendimento' | 'Proposta Gerada' = 'Em Atendimento') => {
@@ -173,7 +180,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans antialiased selection:bg-[#FF600B] selection:text-white">
       {/* Sticky Header */}
       <Header
         currentStep={currentStep}
