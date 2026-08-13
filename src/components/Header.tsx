@@ -15,22 +15,22 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenClientsModal,
 }) => {
   return (
-    <header className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+    <header className="bg-[#111111] text-white border-b border-[#2A2A2A] sticky top-0 z-30 shadow-md">
       <div className="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Brand logo & title */}
         <div 
           onClick={onReset}
           className="flex items-center gap-2.5 cursor-pointer group"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-900/30 group-hover:scale-105 transition-transform">
-            <Building2 className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-[#FF600B] flex items-center justify-center text-white shadow-lg shadow-[#FF600B]/20 group-hover:scale-105 transition-transform">
+            <Building2 className="w-5 h-5 text-white" />
           </div>
           <div>
             <span className="font-bold text-base tracking-tight text-white leading-none block">
               SIMULADOR MCMV
             </span>
-            <p className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
-              INC
+            <p className="text-xs text-[#FF600B] font-bold leading-tight mt-0.5">
+              INC EMPREENDIMENTOS
             </p>
           </div>
         </div>
@@ -40,20 +40,20 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={onOpenClientsModal}
-            className="flex items-center gap-1.5 text-xs text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/60 px-2.5 py-1.5 rounded-lg border border-emerald-500/40 font-bold transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-[#FF600B] bg-[#FF600B]/10 hover:bg-[#FF600B]/20 px-2.5 py-1.5 rounded-lg border border-[#FF600B]/30 font-bold transition-colors cursor-pointer"
             title="Clientes"
           >
-            <Users className="w-3.5 h-3.5 text-emerald-400" />
+            <Users className="w-3.5 h-3.5 text-[#FF600B]" />
             <span>Clientes</span>
           </button>
 
           <button
             type="button"
             onClick={onReset}
-            className="flex items-center gap-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs text-[#B5B5B5] hover:text-white bg-[#161616] hover:bg-[#2A2A2A] px-2.5 py-1.5 rounded-lg border border-[#2A2A2A] transition-colors cursor-pointer"
             title="Nova Simulação"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+            <RotateCcw className="w-3.5 h-3.5 text-[#FF600B]" />
             <span className="hidden sm:inline">Início</span>
           </button>
         </div>

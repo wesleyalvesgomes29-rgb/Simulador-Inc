@@ -32,7 +32,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onNav
   const currentIndex = getStepIndex(currentStep);
 
   return (
-    <div className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 py-2.5 px-4 sticky top-[57px] z-20">
+    <div className="bg-[#111111] backdrop-blur-md border-b border-[#2A2A2A] py-2.5 px-4 sticky top-[57px] z-20">
       <div className="max-w-xl mx-auto flex items-center justify-between">
         {STEPS.map((step) => {
           const isDone = step.number < currentIndex;
@@ -53,10 +53,10 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onNav
               <div
                 className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${
                   isDone
-                    ? 'bg-emerald-500 text-slate-950 font-extrabold shadow-sm'
+                    ? 'bg-[#FF600B]/20 text-[#FF600B] border border-[#FF600B]/50 font-extrabold shadow-sm'
                     : isCurrent
-                    ? 'bg-teal-500 text-white ring-2 ring-teal-400/40 ring-offset-2 ring-offset-slate-900 shadow-md'
-                    : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    ? 'bg-[#FF600B] text-white ring-2 ring-[#FF600B]/40 ring-offset-2 ring-offset-[#111111] shadow-md'
+                    : 'bg-[#161616] text-[#B5B5B5] border border-[#2A2A2A]'
                 }`}
               >
                 {isDone ? <Check className="w-4 h-4 stroke-[3]" /> : step.number}
@@ -64,10 +64,10 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onNav
               <span
                 className={`text-[10px] font-semibold tracking-tight truncate max-w-[65px] text-center ${
                   isCurrent
-                    ? 'text-teal-400 font-bold'
+                    ? 'text-[#FF600B] font-bold'
                     : isDone
-                    ? 'text-slate-300'
-                    : 'text-slate-500'
+                    ? 'text-white'
+                    : 'text-[#B5B5B5]'
                 }`}
               >
                 {step.label}

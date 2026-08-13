@@ -133,32 +133,39 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
   const saldoFinalAParcelar = Math.max(0, valorEntradaTotal - sinalAVista - somaIntermediarias);
 
   // Split calculations based on empreendimento configuration
+  const isJardimDoSol = empreendimento.id === 'park-jardim-do-sol';
+  const isEspanha = empreendimento.id === 'park-espanha';
   const qtdObra = Math.min(numParcelasEntrada, limitObra);
   const qtdPosObra = Math.max(0, Math.min(limitPosObra, numParcelasEntrada - limitObra));
-
-  // Split proportions
-  const ratioObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
-    ? 0.52194
-    : numParcelasEntrada > 0 ? (qtdObra / numParcelasEntrada) : 0;
-
-  const ratioPosObra = (numParcelasEntrada === 108 && empreendimento.id === 'park-jardim-do-sol')
-    ? 0.47806
-    : numParcelasEntrada > 0 ? (qtdPosObra / numParcelasEntrada) : 0;
-
-  const saldoBaseObra = saldoApenasComSinal * ratioObra;
-  const saldoBasePosObra = saldoApenasComSinal * ratioPosObra;
-
-  const valorParcelaObra = qtdObra > 0
-    ? Math.max(0, saldoBaseObra - somaInterObra) / qtdObra
-    : 0;
-
-  const valorParcelaPosObra = qtdPosObra > 0
-    ? Math.max(0, saldoBasePosObra - somaInterPosObra) / qtdPosObra
-    : 0;
 
   const valorParcelaUnica = numParcelasEntrada > 0
     ? Math.max(0, saldoFinalAParcelar) / numParcelasEntrada
     : 0;
+
+  let valorParcelaObra = 0;
+  let valorParcelaPosObra = 0;
+
+  if (numParcelasEntrada > 0) {
+    if (isJardimDoSol || isEspanha) {
+      // Balanced monthly installments for Park Jardim do Sol and Park Espanha
+      valorParcelaObra = qtdObra > 0 ? valorParcelaUnica : 0;
+      valorParcelaPosObra = qtdPosObra > 0 ? valorParcelaUnica : 0;
+    } else {
+      // Standard proportional split for other developments
+      const ratioObra = qtdObra / numParcelasEntrada;
+      const ratioPosObra = qtdPosObra / numParcelasEntrada;
+      const saldoBaseObra = saldoApenasComSinal * ratioObra;
+      const saldoBasePosObra = saldoApenasComSinal * ratioPosObra;
+
+      valorParcelaObra = qtdObra > 0
+        ? Math.max(0, saldoBaseObra - somaInterObra) / qtdObra
+        : 0;
+
+      valorParcelaPosObra = qtdPosObra > 0
+        ? Math.max(0, saldoBasePosObra - somaInterPosObra) / qtdPosObra
+        : 0;
+    }
+  }
 
   // Intermediária Handlers
   const handleUpdateIntermediaria = (id: string, field: 'mes' | 'valor' | 'rotulo', value: any) => {
@@ -215,11 +222,11 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
       exit={{ opacity: 0, x: -20 }}
       className="max-w-xl mx-auto px-4 py-6"
     >
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-7 shadow-xl">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-3xl p-5 md:p-7 shadow-xl">
         {/* Step Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#2A2A2A]">
           <div>
-            <span className="text-xs font-bold text-teal-400 uppercase tracking-wider block mb-1">
+            <span className="text-xs font-bold text-[#FF600B] uppercase tracking-wider block mb-1">
               Etapa 5 de 6 • FLUXO INC
             </span>
             <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
@@ -229,7 +236,7 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs font-semibold text-[#B5B5B5] hover:text-white bg-[#111111] hover:bg-[#2A2A2A] px-3 py-2 rounded-xl transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
             Voltar
@@ -237,14 +244,14 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
         </div>
 
         {/* 1. SELEÇÃO DE MODO: FLUXO PADRÃO DO PDF vs PERSONALIZAR FLUXO */}
-        <div className="bg-slate-950 p-1.5 rounded-2xl border border-slate-800 mb-6 grid grid-cols-2 gap-1">
+        <div className="bg-[#0A0A0A] p-1.5 rounded-2xl border border-[#2A2A2A] mb-6 grid grid-cols-2 gap-1">
           <button
             type="button"
             onClick={handleUsarFluxoPadrao}
             className={`py-3 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               modoFluxo === 'padrao'
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-950/40 ring-1 ring-emerald-400'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                ? 'bg-[#FF600B] text-white shadow-md shadow-[#FF600B]/20 ring-1 ring-[#FF600B]'
+                : 'text-[#B5B5B5] hover:text-white hover:bg-[#111111]'
             }`}
           >
             <Zap className="w-4 h-4 flex-shrink-0" />
@@ -256,8 +263,8 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
             onClick={handlePersonalizarFluxo}
             className={`py-3 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               modoFluxo === 'personalizado'
-                ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-950/40 ring-1 ring-teal-400'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                ? 'bg-[#FF600B] text-white shadow-md shadow-[#FF600B]/20 ring-1 ring-[#FF600B]'
+                : 'text-[#B5B5B5] hover:text-white hover:bg-[#111111]'
             }`}
           >
             <Sliders className="w-4 h-4 flex-shrink-0" />
@@ -267,15 +274,18 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
 
         {/* Status Badge */}
         {modoFluxo === 'padrao' ? (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl mb-6 flex items-center gap-2 text-xs text-emerald-300">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <div className="bg-[#FF600B]/10 border border-[#FF600B]/30 p-3 rounded-xl mb-6 flex items-center gap-2 text-xs text-[#FF600B]">
+            <CheckCircle2 className="w-4 h-4 text-[#FF600B] flex-shrink-0" />
             <span>
-              <strong>Fluxo Padrão do PDF INC ativo:</strong> Sinal R$ 40k + 108 Parcelas + 6 Intermediárias Anuais.
+              <strong>Fluxo Padrão do PDF INC ativo:</strong>{' '}
+              {empreendimento.id === 'park-espanha'
+                ? 'Sinal R$ 0 + 74 Parcelas Mensais + 4 Intermediárias Anuais.'
+                : 'Sinal R$ 40k + 108 Parcelas + 6 Intermediárias Anuais.'}
             </span>
           </div>
         ) : (
-          <div className="bg-teal-500/10 border border-teal-500/30 p-3 rounded-xl mb-6 flex items-center gap-2 text-xs text-teal-300">
-            <Sliders className="w-4 h-4 text-teal-400 flex-shrink-0" />
+          <div className="bg-[#FF600B]/10 border border-[#FF600B]/30 p-3 rounded-xl mb-6 flex items-center gap-2 text-xs text-[#FF600B]">
+            <Sliders className="w-4 h-4 text-[#FF600B] flex-shrink-0" />
             <span>
               <strong>Modo Personalizado Ativo:</strong> Ajuste o sinal, prazos e intermediárias conforme a necessidade do seu cliente.
             </span>
@@ -284,9 +294,9 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 2. VALIDAÇÃO MATEMÁTICA DO SALDO A PARCELAR */}
-          <div className="bg-slate-950 p-4.5 rounded-2xl border border-slate-800 space-y-3">
-            <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-800">
-              <Calculator className="w-4 h-4 text-teal-400" />
+          <div className="bg-[#0A0A0A] p-4.5 rounded-2xl border border-[#2A2A2A] space-y-3">
+            <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-[#2A2A2A]">
+              <Calculator className="w-4 h-4 text-[#FF600B]" />
               CÁLCULO DO SALDO A PARCELAR COM A INC
             </h3>
 
@@ -294,7 +304,7 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
               {/* Valor Total da Entrada (Pró-Soluto) */}
               <div className="flex items-center justify-between font-bold">
                 <span className="text-slate-300 flex items-center gap-1.5">
-                  <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <PlusCircle className="w-3.5 h-3.5 text-[#FF600B]" />
                   Valor Total que precisa ser pago à INC:
                 </span>
                 <span className="text-white text-sm font-black">
@@ -303,9 +313,9 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
               </div>
 
               {/* Input for Sinal à vista */}
-              <div className="flex items-center justify-between py-1 border-t border-slate-900/80">
-                <span className="text-amber-300 flex items-center gap-1.5 font-bold">
-                  <MinusCircle className="w-3.5 h-3.5 text-amber-400" />
+              <div className="flex items-center justify-between py-1 border-t border-[#111111]">
+                <span className="text-[#FF600B] flex items-center gap-1.5 font-bold">
+                  <MinusCircle className="w-3.5 h-3.5 text-[#FF600B]" />
                   (-) Sinal / Entrada Inicial (Dinheiro):
                 </span>
                 <div className="w-36">
@@ -315,31 +325,31 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                     value={displaySinalInput}
                     onChange={handleSinalChange}
                     placeholder="R$ 0,00"
-                    className="w-full bg-slate-900 border border-amber-500/40 text-amber-300 font-extrabold text-xs rounded-lg px-2.5 py-1.5 outline-none focus:border-amber-400 text-right shadow-inner"
+                    className="w-full bg-[#111111] border border-[#FF600B]/40 text-[#FF600B] font-extrabold text-xs rounded-lg px-2.5 py-1.5 outline-none focus:border-[#FF600B] text-right shadow-inner"
                   />
                 </div>
               </div>
 
               {/* Subtotal after Sinal */}
               {usarIntermediarias && somaIntermediarias > 0 && (
-                <div className="flex items-center justify-between py-1 text-slate-400 border-t border-slate-900/80">
+                <div className="flex items-center justify-between py-1 text-[#B5B5B5] border-t border-[#111111]">
                   <span className="flex items-center gap-1.5 font-bold">
-                    <MinusCircle className="w-3.5 h-3.5 text-teal-400" />
+                    <MinusCircle className="w-3.5 h-3.5 text-[#FF600B]" />
                     (-) Soma das Intermediárias ({intermediarias.length}x):
                   </span>
-                  <span className="font-bold text-teal-300">
+                  <span className="font-bold text-[#FF600B]">
                     {formatBRL(somaIntermediarias)}
                   </span>
                 </div>
               )}
 
               {/* EQUAL: Saldo Final a Parcelar */}
-              <div className="flex items-center justify-between pt-2.5 border-t border-slate-800">
-                <span className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Equal className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center justify-between pt-2.5 border-t border-[#2A2A2A]">
+                <span className="text-xs font-black text-[#FF600B] uppercase tracking-wider flex items-center gap-1.5">
+                  <Equal className="w-4 h-4 text-[#FF600B]" />
                   (=) SALDO A PARCELAR EM MENSAIS:
                 </span>
-                <span className="text-xl font-black text-emerald-400">
+                <span className="text-xl font-black text-[#FF600B]">
                   {formatBRL(saldoFinalAParcelar)}
                 </span>
               </div>
@@ -350,10 +360,10 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-teal-400" />
+                <Calendar className="w-4 h-4 text-[#FF600B]" />
                 Quantidade de Parcelas da Entrada (Até {maxTotal}x)
               </label>
-              <div className="flex items-center gap-1.5 bg-slate-950 border border-emerald-500/40 px-2 py-1 rounded-xl">
+              <div className="flex items-center gap-1.5 bg-[#0A0A0A] border border-[#FF600B]/40 px-2 py-1 rounded-xl">
                 <input
                   type="number"
                   min="1"
@@ -364,9 +374,9 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                     setNumParcelasEntrada(val);
                     setModoFluxo('personalizado');
                   }}
-                  className="w-14 bg-transparent text-right font-black text-emerald-400 text-sm outline-none"
+                  className="w-14 bg-transparent text-right font-black text-[#FF600B] text-sm outline-none"
                 />
-                <span className="text-xs font-extrabold text-slate-400">x</span>
+                <span className="text-xs font-extrabold text-[#B5B5B5]">x</span>
               </div>
             </div>
 
@@ -382,8 +392,8 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                   }}
                   className={`py-2 px-1.5 rounded-xl font-black text-xs border transition-all cursor-pointer ${
                     numParcelasEntrada === opt
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-950/40 ring-2 ring-emerald-400/30'
-                      : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                      ? 'bg-[#FF600B] text-white border-[#FF600B] shadow-md shadow-[#FF600B]/20 ring-2 ring-[#FF600B]/30'
+                      : 'bg-[#0A0A0A] text-[#B5B5B5] border-[#2A2A2A] hover:bg-[#111111]'
                   }`}
                 >
                   {opt}x
@@ -392,7 +402,7 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
             </div>
 
             {/* Range Slider for Granular Adjustment */}
-            <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div className="bg-[#0A0A0A] p-3 rounded-2xl border border-[#2A2A2A]">
               <input
                 type="range"
                 min="12"
@@ -403,9 +413,9 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                   setNumParcelasEntrada(Number(e.target.value));
                   setModoFluxo('personalizado');
                 }}
-                className="w-full accent-emerald-400 cursor-pointer"
+                className="w-full accent-[#FF600B] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] font-bold text-slate-500 mt-1">
+              <div className="flex justify-between text-[10px] font-bold text-[#B5B5B5] mt-1">
                 <span>12x</span>
                 <span>{limitObra}x (Obra)</span>
                 <span>{maxTotal}x (Máximo)</span>
@@ -414,13 +424,13 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
           </div>
 
           {/* 4. SEÇÃO DE INTERMEDIÁRIAS REPETÍVEIS DA INC */}
-          <div className="bg-slate-950/90 p-4 rounded-2xl border border-slate-800">
+          <div className="bg-[#0A0A0A] p-4 rounded-2xl border border-[#2A2A2A]">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <span className="text-xs font-bold text-white uppercase tracking-wider block">
                   Intermediárias / Balões Anuais
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-[#B5B5B5]">
                   Reforços configuráveis na Obra e Pós-Obra
                 </span>
               </div>
@@ -437,11 +447,11 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                   }
                 }}
                 className={`w-12 h-6 rounded-full p-1 transition-colors cursor-pointer ${
-                  usarIntermediarias ? 'bg-emerald-500' : 'bg-slate-800'
+                  usarIntermediarias ? 'bg-[#FF600B]' : 'bg-[#2A2A2A]'
                 }`}
               >
                 <div
-                  className={`w-4 h-4 rounded-full bg-slate-950 transition-transform ${
+                  className={`w-4 h-4 rounded-full bg-white transition-transform ${
                     usarIntermediarias ? 'translate-x-6' : 'translate-x-0'
                   }`}
                 />
@@ -450,15 +460,15 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
 
             {/* List of Configured Intermediarias */}
             {usarIntermediarias && (
-              <div className="space-y-3 pt-3 border-t border-slate-800">
-                {intermediarias.map((item, index) => (
+              <div className="space-y-3 pt-3 border-t border-[#2A2A2A]">
+                {intermediarias.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2.5"
+                    className="bg-[#111111] p-3 rounded-xl border border-[#2A2A2A] flex items-center justify-between gap-2.5"
                   >
                     {/* Period Selector */}
                     <div className="w-1/2">
-                      <label className="text-[10px] text-slate-400 font-bold block mb-1">
+                      <label className="text-[10px] text-[#B5B5B5] font-bold block mb-1">
                         Período / Mês
                       </label>
                       <select
@@ -466,7 +476,7 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                         onChange={(e) =>
                           handleUpdateIntermediaria(item.id, 'mes', Number(e.target.value))
                         }
-                        className="w-full bg-slate-950 border border-slate-700 text-white font-bold text-xs rounded-lg px-2 py-1.5 outline-none focus:border-teal-400"
+                        className="w-full bg-[#0A0A0A] border border-[#2A2A2A] text-white font-bold text-xs rounded-lg px-2 py-1.5 outline-none focus:border-[#FF600B]"
                       >
                         {[12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108].filter(m => m <= maxTotal).map(
                           (m) => (
@@ -480,7 +490,7 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
 
                     {/* Value Input */}
                     <div className="w-1/2">
-                      <label className="text-[10px] text-slate-400 font-bold block mb-1">
+                      <label className="text-[10px] text-[#B5B5B5] font-bold block mb-1">
                         Valor (R$)
                       </label>
                       <div className="flex items-center gap-1.5">
@@ -493,12 +503,12 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                             handleUpdateIntermediaria(item.id, 'valor', val);
                           }}
                           placeholder="R$ 0,00"
-                          className="w-full bg-slate-950 border border-slate-700 text-teal-300 font-bold text-xs rounded-lg px-2 py-1.5 outline-none focus:border-teal-400"
+                          className="w-full bg-[#0A0A0A] border border-[#2A2A2A] text-[#FF600B] font-bold text-xs rounded-lg px-2 py-1.5 outline-none focus:border-[#FF600B]"
                         />
                         <button
                           type="button"
                           onClick={() => handleRemoveIntermediaria(item.id)}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                          className="p-1.5 text-[#B5B5B5] hover:text-rose-400 transition-colors cursor-pointer"
                           title="Remover intermediária"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -512,16 +522,16 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
                 <button
                   type="button"
                   onClick={handleAddIntermediaria}
-                  className="w-full py-3 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 border border-dashed border-teal-500/50 text-teal-300 text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-[0.99]"
+                  className="w-full py-3 px-3 rounded-xl bg-[#111111] hover:bg-[#2A2A2A] border border-dashed border-[#FF600B]/50 text-[#FF600B] text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-[0.99]"
                 >
-                  <Plus className="w-4 h-4 text-teal-400" />
+                  <Plus className="w-4 h-4 text-[#FF600B]" />
                   <span>+ ADICIONAR INTERMEDIÁRIA</span>
                 </button>
 
                 {/* Total Intermediarias Summary */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-slate-800 text-slate-300">
+                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-[#2A2A2A] text-slate-300">
                   <span>Soma das Intermediárias:</span>
-                  <span className="text-teal-300 font-black text-sm">
+                  <span className="text-[#FF600B] font-black text-sm">
                     {formatBRL(somaIntermediarias)}
                   </span>
                 </div>
@@ -530,12 +540,12 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
           </div>
 
           {/* 5. VISUAL SEPARATION: PARCELAS DURANTE A OBRA x PARCELAS PÓS-OBRA */}
-          <div className="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 p-5 rounded-2xl border border-emerald-500/50 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-emerald-900/60 pb-3">
-              <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+          <div className="bg-gradient-to-r from-[#FF600B]/15 via-[#111111] to-[#0A0A0A] p-5 rounded-2xl border border-[#FF600B]/50 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2A2A2A] pb-3">
+              <span className="text-xs font-black text-[#FF600B] uppercase tracking-wider">
                 RESULTADO DO PARCELAMENTO MENSAL
               </span>
-              <span className="text-xs font-black text-slate-950 bg-emerald-400 px-2.5 py-0.5 rounded-md">
+              <span className="text-xs font-black text-white bg-[#FF600B] px-2.5 py-0.5 rounded-md">
                 Total {numParcelasEntrada} Parcelas
               </span>
             </div>
@@ -543,40 +553,40 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
             {qtdPosObra > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Obra Installments */}
-                <div className="bg-slate-900/90 p-4 rounded-xl border border-emerald-500/40">
-                  <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider block">
+                <div className="bg-[#0A0A0A] p-4 rounded-xl border border-[#FF600B]/40">
+                  <span className="text-[11px] font-extrabold text-[#FF600B] uppercase tracking-wider block">
                     PARCELAS DURANTE A OBRA ({qtdObra}x)
                   </span>
                   <span className="text-2xl font-black text-white block my-1">
                     {formatBRL(valorParcelaObra)}
                   </span>
-                  <span className="text-[10px] text-emerald-300/80 font-semibold block">
+                  <span className="text-[10px] text-[#B5B5B5] font-semibold block">
                     📌 Correção: INCC
                   </span>
                 </div>
 
                 {/* Pós-Obra Installments */}
-                <div className="bg-slate-900/90 p-4 rounded-xl border border-teal-500/40">
-                  <span className="text-[11px] font-extrabold text-teal-400 uppercase tracking-wider block">
+                <div className="bg-[#0A0A0A] p-4 rounded-xl border border-[#2A2A2A]">
+                  <span className="text-[11px] font-extrabold text-[#B5B5B5] uppercase tracking-wider block">
                     PARCELAS PÓS-OBRA ({qtdPosObra}x)
                   </span>
                   <span className="text-2xl font-black text-white block my-1">
                     {formatBRL(valorParcelaPosObra)}
                   </span>
-                  <span className="text-[10px] text-teal-300/80 font-semibold block">
+                  <span className="text-[10px] text-[#B5B5B5] font-semibold block">
                     📌 Correção: IPCA + 1,99% a.a.
                   </span>
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-900/90 p-4 rounded-xl border border-emerald-500/40">
-                <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider block">
+              <div className="bg-[#0A0A0A] p-4 rounded-xl border border-[#FF600B]/40">
+                <span className="text-[11px] font-extrabold text-[#FF600B] uppercase tracking-wider block">
                   PARCELAS DURANTE A OBRA ({numParcelasEntrada}x)
                 </span>
                 <span className="text-3xl font-black text-white block my-1">
                   {formatBRL(valorParcelaUnica)}
                 </span>
-                <span className="text-[10px] text-emerald-300/80 font-semibold block">
+                <span className="text-[10px] text-[#B5B5B5] font-semibold block">
                   📌 Correção: INCC
                 </span>
               </div>
@@ -584,22 +594,22 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
           </div>
 
           {/* 6. CORREÇÕES E REGRAS DO PDF (TRANSPARENTE AO CORRETOR) */}
-          <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
+          <div className="bg-[#0A0A0A] p-4 rounded-2xl border border-[#2A2A2A] space-y-2 text-xs">
             <h4 className="font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-              <Info className="w-4 h-4 text-teal-400" />
+              <Info className="w-4 h-4 text-[#FF600B]" />
               Regras de Reajuste e Condições do Empreendimento
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-              <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] text-slate-400 font-bold block">Durante a Obra:</span>
-                <span className="text-xs font-black text-emerald-400">Correção pelo INCC</span>
+              <div className="bg-[#111111] p-2.5 rounded-xl border border-[#2A2A2A]">
+                <span className="text-[10px] text-[#B5B5B5] font-bold block">Durante a Obra:</span>
+                <span className="text-xs font-black text-[#FF600B]">Correção pelo INCC</span>
               </div>
-              <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] text-slate-400 font-bold block">Pós-Obra (Chaves):</span>
-                <span className="text-xs font-black text-teal-400">IPCA + 1,99% ao ano</span>
+              <div className="bg-[#111111] p-2.5 rounded-xl border border-[#2A2A2A]">
+                <span className="text-[10px] text-[#B5B5B5] font-bold block">Pós-Obra (Chaves):</span>
+                <span className="text-xs font-black text-[#FF600B]">IPCA + 1,99% ao ano</span>
               </div>
             </div>
-            <div className="space-y-1 text-slate-400 text-[11px]">
+            <div className="space-y-1 text-[#B5B5B5] text-[11px]">
               <p>• <strong>Documentação (Registro + ITBI):</strong> R$ 6.800,00 parcelado em até 36x de R$ 188,89 + Tarifa R$ 1.000,00.</p>
               <p>• <strong>Fiador:</strong> Obrigatoriedade de fiador com CPF regular e renda comprovada.</p>
             </div>
@@ -608,10 +618,10 @@ export const Step5IncFlow: React.FC<Step5IncFlowProps> = ({
           {/* Submit Action Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-base py-4 px-6 rounded-2xl shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer"
+            className="w-full bg-[#FF600B] hover:bg-[#D94D00] text-white font-black text-base py-4 px-6 rounded-2xl shadow-xl shadow-[#FF600B]/20 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer"
           >
             <span>VER PROPOSTA GERADA</span>
-            <ArrowRight className="w-5 h-5 text-slate-950" />
+            <ArrowRight className="w-5 h-5 text-white" />
           </button>
         </form>
       </div>

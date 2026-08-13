@@ -125,22 +125,22 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
       exit={{ opacity: 0, x: -20 }}
       className="max-w-xl mx-auto px-4 py-6"
     >
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-7 shadow-2xl">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-3xl p-5 md:p-7 shadow-2xl">
         {/* Step Header */}
-        <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#2A2A2A]">
           <div>
-            <span className="text-xs font-bold text-teal-400 uppercase tracking-wider block mb-1">
+            <span className="text-xs font-bold text-[#FF600B] uppercase tracking-wider block mb-1">
               Etapa 3 de 6 • ESCOLHA DO IMÓVEL
             </span>
             <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-emerald-400" />
+              <Building2 className="w-5 h-5 text-[#FF600B]" />
               {selectedEmpreendimento.nomeEmpreendimento.toUpperCase()}
             </h2>
           </div>
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs font-semibold text-[#B5B5B5] hover:text-white bg-[#111111] hover:bg-[#2A2A2A] px-3 py-2 rounded-xl transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
             Voltar
@@ -150,8 +150,8 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* 1. SELEÇÃO E PESQUISA DE EMPREENDIMENTO */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Search className="w-4 h-4 text-emerald-400" />
+            <label className="block text-xs font-bold text-[#B5B5B5] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Search className="w-4 h-4 text-[#FF600B]" />
               🔎 PESQUISAR EMPREENDIMENTO
             </label>
 
@@ -166,17 +166,17 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                     onClick={() => handleSelectEmpreendimento(emp)}
                     className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-400/30'
-                        : 'bg-slate-950 border-slate-800 hover:bg-slate-850 hover:border-slate-700'
+                        ? 'bg-[#FF600B]/15 border-[#FF600B] ring-2 ring-[#FF600B]/30'
+                        : 'bg-[#0A0A0A] border-[#2A2A2A] hover:bg-[#111111] hover:border-[#2A2A2A]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`text-xs font-black uppercase ${isSelected ? 'text-emerald-300' : 'text-slate-200'}`}>
+                      <span className={`text-xs font-black uppercase ${isSelected ? 'text-[#FF600B]' : 'text-[#FFFFFF]'}`}>
                         {emp.nomeEmpreendimento}
                       </span>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+                      {isSelected && <CheckCircle2 className="w-4 h-4 text-[#FF600B] flex-shrink-0" />}
                     </div>
-                    <span className="text-[10px] text-slate-400 font-semibold block">
+                    <span className="text-[10px] text-[#B5B5B5] font-semibold block">
                       {emp.localizacao} • INC
                     </span>
                   </button>
@@ -186,9 +186,9 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
           </div>
 
           {/* 2. PESQUISA E SELEÇÃO DE UNIDADE */}
-          <div className="pt-2 border-t border-slate-800/80">
-            <label className="block text-xs font-bold text-teal-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Search className="w-4 h-4 text-teal-400" />
+          <div className="pt-2 border-t border-[#2A2A2A]">
+            <label className="block text-xs font-bold text-[#FF600B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Search className="w-4 h-4 text-[#FF600B]" />
               🔎 PESQUISAR UNIDADE ({selectedEmpreendimento.nomeEmpreendimento})
             </label>
             <div className="relative">
@@ -198,13 +198,13 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                 value={unitSearchTerm}
                 onChange={(e) => setUnitSearchTerm(e.target.value)}
                 placeholder="Digite o número da unidade (ex.: 0101, 1510)"
-                className="w-full bg-slate-950 border-2 border-slate-700 focus:border-teal-400 text-white font-bold text-base rounded-2xl pl-4 pr-10 py-3.5 outline-none shadow-inner placeholder:text-slate-500 transition-colors"
+                className="w-full bg-[#0A0A0A] border-2 border-[#2A2A2A] focus:border-[#FF600B] text-white font-bold text-base rounded-2xl pl-4 pr-10 py-3.5 outline-none shadow-inner placeholder:text-[#B5B5B5]/60 transition-colors"
               />
               {unitSearchTerm && (
                 <button
                   type="button"
                   onClick={() => setUnitSearchTerm('')}
-                  className="absolute right-3.5 top-3.5 text-xs font-bold bg-slate-800 text-slate-400 hover:text-white w-6 h-6 rounded-full flex items-center justify-center"
+                  className="absolute right-3.5 top-3.5 text-xs font-bold bg-[#111111] text-[#B5B5B5] hover:text-white w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
                 >
                   ✕
                 </button>
@@ -214,9 +214,9 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
 
           {/* Currently Selected Unit Banner */}
           {selectedUnit && !cleanUnitQuery && !isCustom && (
-            <div className="bg-emerald-950/60 border-2 border-emerald-500/50 p-4 rounded-2xl shadow-lg relative">
+            <div className="bg-[#FF600B]/10 border-2 border-[#FF600B]/50 p-4 rounded-2xl shadow-lg relative">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="text-[10px] font-black text-[#FF600B] uppercase tracking-widest bg-[#FF600B]/20 px-2 py-0.5 rounded border border-[#FF600B]/30">
                   UNIDADE ATUALMENTE SELECIONADA
                 </span>
                 <button
@@ -225,7 +225,7 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                     setSelectedUnit(null);
                     setUnitSearchTerm('');
                   }}
-                  className="text-xs font-bold text-slate-400 hover:text-rose-400 underline"
+                  className="text-xs font-bold text-[#B5B5B5] hover:text-rose-400 underline cursor-pointer"
                 >
                   Trocar unidade
                 </button>
@@ -239,16 +239,16 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                   <p className="text-xs font-semibold text-slate-300 mt-0.5">
                     {formatTipologia(selectedUnit.tipologia)}
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-[#B5B5B5] mt-1">
                     {selectedUnit.areaM2} m² • Vaga {selectedUnit.vagas.toLowerCase()}
                   </p>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">
+                  <span className="text-[10px] text-[#B5B5B5] uppercase font-bold block">
                     Valor de Venda
                   </span>
-                  <span className="text-xl font-black text-emerald-400">
+                  <span className="text-xl font-black text-[#FF600B]">
                     {formatBRL(selectedUnit.valorVenda || valorImovel)}
                   </span>
                 </div>
@@ -260,12 +260,12 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
           {cleanUnitQuery.length > 0 && (
             <div className="space-y-3">
               {matchingUnits.length === 0 ? (
-                <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center space-y-2 my-2">
-                  <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
-                  <p className="text-slate-300 font-bold text-sm">
+                <div className="bg-[#0A0A0A] border border-[#2A2A2A] rounded-2xl p-6 text-center space-y-2 my-2">
+                  <AlertCircle className="w-8 h-8 text-[#FF600B] mx-auto" />
+                  <p className="text-[#FFFFFF] font-bold text-sm">
                     Unidade não encontrada no {selectedEmpreendimento.nomeEmpreendimento}.
                   </p>
-                  <p className="text-slate-500 text-xs">
+                  <p className="text-[#B5B5B5] text-xs">
                     Tente digitar números como 0101, 0201, 0303, 1510, 2601...
                   </p>
                 </div>
@@ -280,8 +280,8 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                       onClick={() => handleSelectUnit(u)}
                       className={`p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
                         isSelected
-                          ? 'bg-emerald-950/80 border-emerald-400 ring-2 ring-emerald-400/40 shadow-xl'
-                          : 'bg-slate-950 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
+                          ? 'bg-[#FF600B]/15 border-[#FF600B] ring-2 ring-[#FF600B]/40 shadow-xl'
+                          : 'bg-[#0A0A0A] border-[#2A2A2A] hover:border-[#2A2A2A] hover:bg-[#111111]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -290,7 +290,7 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                             <span className="text-lg font-black text-white">
                               Unidade {u.unidade}
                             </span>
-                            <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded border border-emerald-500/30">
+                            <span className="bg-[#FF600B]/20 text-[#FF600B] text-[10px] font-extrabold px-2 py-0.5 rounded border border-[#FF600B]/30">
                               Disponível
                             </span>
                           </div>
@@ -299,35 +299,35 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                             {formatTipologia(u.tipologia)}
                           </p>
 
-                          <div className="flex items-center gap-3 text-xs text-slate-400 mt-2">
+                          <div className="flex items-center gap-3 text-xs text-[#B5B5B5] mt-2">
                             <span className="flex items-center gap-1 font-semibold text-slate-300">
-                              <Maximize2 className="w-3.5 h-3.5 text-teal-400" />
+                              <Maximize2 className="w-3.5 h-3.5 text-[#FF600B]" />
                               {u.areaM2} m²
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1 font-semibold text-slate-300">
-                              <Car className="w-3.5 h-3.5 text-teal-400" />
+                              <Car className="w-3.5 h-3.5 text-[#FF600B]" />
                               Vaga {u.vagas.toLowerCase()}
                             </span>
                           </div>
                         </div>
 
                         <div className="text-right flex-shrink-0">
-                          <span className="text-[10px] text-slate-400 font-extrabold uppercase block">
+                          <span className="text-[10px] text-[#B5B5B5] font-extrabold uppercase block">
                             VALOR DE VENDA
                           </span>
-                          <span className="text-lg font-black text-emerald-400 block mt-0.5">
+                          <span className="text-lg font-black text-[#FF600B] block mt-0.5">
                             {formatBRL(precoVendaOficial)}
                           </span>
                         </div>
                       </div>
 
                       {isSelected && (
-                        <div className="mt-3 pt-2.5 border-t border-emerald-500/30 flex items-center justify-between text-xs font-bold text-emerald-300">
+                        <div className="mt-3 pt-2.5 border-t border-[#FF600B]/30 flex items-center justify-between text-xs font-bold text-[#FF600B]">
                           <span className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Unidade Selecionada
+                            <CheckCircle2 className="w-4 h-4 text-[#FF600B]" /> Unidade Selecionada
                           </span>
-                          <span className="bg-emerald-500/20 px-2 py-0.5 rounded">Preço Oficial INC</span>
+                          <span className="bg-[#FF600B]/20 px-2 py-0.5 rounded">Preço Oficial INC</span>
                         </div>
                       )}
                     </div>
@@ -338,12 +338,12 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
           )}
 
           {!cleanUnitQuery && !selectedUnit && !isCustom && (
-            <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-6 text-center space-y-2 my-2">
-              <Home className="w-8 h-8 text-slate-600 mx-auto" />
-              <p className="text-slate-300 font-bold text-sm">
+            <div className="bg-[#0A0A0A]/60 border border-[#2A2A2A] rounded-2xl p-6 text-center space-y-2 my-2">
+              <Home className="w-8 h-8 text-[#B5B5B5] mx-auto" />
+              <p className="text-white font-bold text-sm">
                 Digite o número da unidade no campo acima
               </p>
-              <p className="text-slate-500 text-xs max-w-sm mx-auto">
+              <p className="text-[#B5B5B5] text-xs max-w-sm mx-auto">
                 O sistema buscará instantaneamente o valor de venda e as características oficiais da unidade no {selectedEmpreendimento.nomeEmpreendimento}.
               </p>
             </div>
@@ -355,21 +355,21 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
               <button
                 type="button"
                 onClick={handleSelectCustom}
-                className="w-full text-center text-xs text-slate-400 hover:text-teal-300 font-semibold py-2 hover:underline transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full text-center text-xs text-[#B5B5B5] hover:text-[#FF600B] font-semibold py-2 hover:underline transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Edit3 className="w-3.5 h-3.5 text-teal-400" />
+                <Edit3 className="w-3.5 h-3.5 text-[#FF600B]" />
                 <span>Digitar outro valor de venda manualmente</span>
               </button>
             ) : (
-              <div className="bg-slate-950 border border-teal-500/40 p-4 rounded-2xl space-y-3">
+              <div className="bg-[#0A0A0A] border border-[#FF600B]/40 p-4 rounded-2xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-teal-300 uppercase">
+                  <span className="text-xs font-bold text-[#FF600B] uppercase">
                     VALOR DE VENDA PERSONALIZADO (R$)
                   </span>
                   <button
                     type="button"
                     onClick={() => setIsCustom(false)}
-                    className="text-xs text-slate-400 hover:text-white underline"
+                    className="text-xs text-[#B5B5B5] hover:text-white underline cursor-pointer"
                   >
                     Voltar para busca
                   </button>
@@ -380,7 +380,7 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
                   value={displayCustomValor}
                   onChange={handleCustomValorChange}
                   placeholder="R$ 229.900,00"
-                  className="w-full bg-slate-900 border border-slate-700 text-white font-black text-xl rounded-xl px-4 py-3 outline-none focus:border-teal-400"
+                  className="w-full bg-[#111111] border border-[#2A2A2A] text-white font-black text-xl rounded-xl px-4 py-3 outline-none focus:border-[#FF600B]"
                 />
               </div>
             )}
@@ -390,10 +390,10 @@ export const Step3EscolhaImovel: React.FC<Step3EscolhaImovelProps> = ({
           <button
             type="submit"
             disabled={valorImovel <= 0}
-            className="w-full mt-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-base py-4 px-6 rounded-2xl shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full mt-4 bg-[#FF600B] hover:bg-[#D94D00] text-white font-black text-base py-4 px-6 rounded-2xl shadow-xl shadow-[#FF600B]/20 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span>AVANÇAR PARA VALORES DO CLIENTE</span>
-            <ArrowRight className="w-5 h-5 text-slate-950" />
+            <ArrowRight className="w-5 h-5 text-white" />
           </button>
         </form>
       </div>
