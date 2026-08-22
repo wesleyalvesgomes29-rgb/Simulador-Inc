@@ -1,6 +1,6 @@
 {
-  "name": "Simulador MCMV - INC",
-  "description": "Simulador comercial para corretores de imóveis - MCMV e fluxo de pagamento (INC Empreendimentos).",
+  "name": "INC Empreendimentos - Simulador MCMV",
+  "description": "Simulador imobiliário oficial MCMV da INC Empreendimentos para cálculo de financiamento CAIXA, subsídios e fluxo de entrada pró-soluto.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
